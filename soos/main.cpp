@@ -1235,8 +1235,7 @@ void newThreadMainFunction(void* __dummy_arg__)
         // todo: this is hard-coded at the moment
         osTickCounterUpdate(&tick_ctr_fps);
         timems_frame = osTickCounterRead(&tick_ctr_fps);
-        /*
-        const double minTimePerFrame = 32.0; // at 30 FPS, 1 frame is 33.3 ms
+        const double minTimePerFrame = 30.0; // at 30 FPS, 1 frame is 33.3 ms
         if(timems_frame > minTimePerFrame)
         {
             double frameLimitWait = minTimePerFrame - timems_frame;
@@ -1244,7 +1243,6 @@ void newThreadMainFunction(void* __dummy_arg__)
             svcSleepThread(1e6 * frameLimitWait); // milliseconds to nanoseconds
             osTickCounterUpdate(&tick_ctr_fps);
         }
-        */
 
         if(GSPGPU_ImportDisplayCaptureInfo(&capInfo[(u8)!c]) < 0)
         {
@@ -1266,6 +1264,10 @@ void newThreadMainFunction(void* __dummy_arg__)
 
             format[0] = capInfo[(u8)c].screencapture[0].format & 0b111;
             format[1] = capInfo[(u8)c].screencapture[1].format & 0b111;
+
+            if(isold == 0){
+                svcFlushProcessDataCache(0xFFFF8001, (u8*)screenbuf, capInfo[(u8)c].screencapture[scr].framebuf_widthbytesize * 400);
+            }
 
             // interlacing is disabled on o3DS and 24bpp frames
             if(cfgblk[5] && !isold && (getFormatBpp(format[scr]) != 24))
@@ -1303,10 +1305,6 @@ void newThreadMainFunction(void* __dummy_arg__)
             }
 
             int imgsize = 0;
-
-            if(isold == 0){
-                svcFlushProcessDataCache(0xFFFF8001, (u8*)screenbuf, capInfo[(u8)c].screencapture[scr].framebuf_widthbytesize * 400);
-            }
 
             // interlaced
             if(isStoredFrameInterlaced)
@@ -1391,7 +1389,7 @@ void newThreadMainFunction(void* __dummy_arg__)
             if((cfgblk[11] == 2) && (format[0] == 3))
             {
                 gbvcmode = true;
-                if((frameCount%32)-1 == 0)
+                if((frameCount%128)-1 == 0)
                     gbvcmode_queuefulltopscreen = true;
                 else
                     gbvcmode_queuefulltopscreen = false;
